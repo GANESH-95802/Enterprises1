@@ -1,0 +1,43 @@
+# ============================================
+# AI Enterprise Hub - Docker Compose Configuration
+# ============================================
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-enterprise-hub-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE:-30d}
+      - JWT_REFRESH_EXPIRE=${JWT_REFRESH_EXPIRE:-7d}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEYS=${OPENAI_API_KEYS}
+    volumes:
+      - uploads_data:/app/uploads
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  uploads_data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge

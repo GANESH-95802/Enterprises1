@@ -1,0 +1,101 @@
+const { body, param, query } = require('express-validator');
+
+const idParam = [
+  param('id')
+    .isMongoId().withMessage('Invalid ID format'),
+];
+
+const paginationQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1-100'),
+];
+
+const businessValidation = [
+  body('name').trim().notEmpty().withMessage('Business name is required')
+    .isLength({ max: 200 }).withMessage('Business name must be at most 200 characters'),
+  body('category').trim().notEmpty().withMessage('Category is required')
+    .isLength({ max: 100 }).withMessage('Category must be at most 100 characters'),
+  body('email').optional().trim().isEmail().normalizeEmail(),
+  body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone must be at most 20 characters'),
+  body('status').optional().isIn(['active', 'inactive', 'pending']).withMessage('Invalid status'),
+  body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be at most 2000 characters'),
+];
+
+const productValidation = [
+  body('name').trim().notEmpty().withMessage('Product name is required')
+    .isLength({ max: 200 }).withMessage('Product name must be at most 200 characters'),
+  body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
+  body('category').trim().notEmpty().withMessage('Category is required')
+    .isLength({ max: 100 }).withMessage('Category must be at most 100 characters'),
+  body('quantity').optional().isInt({ min: 0 }).withMessage('Quantity must be a non-negative integer'),
+  body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be at most 2000 characters'),
+];
+
+const customerValidation = [
+  body('name').trim().notEmpty().withMessage('Customer name is required')
+    .isLength({ max: 200 }).withMessage('Customer name must be at most 200 characters'),
+  body('email').optional().trim().isEmail().normalizeEmail(),
+  body('phone').optional().trim().isLength({ max: 20 }).withMessage('Phone must be at most 20 characters'),
+];
+
+const complianceValidation = [
+  body('title').trim().notEmpty().withMessage('Title is required')
+    .isLength({ max: 200 }).withMessage('Title must be at most 200 characters'),
+  body('type').trim().notEmpty().withMessage('Type is required')
+    .isLength({ max: 100 }).withMessage('Type must be at most 100 characters'),
+  body('status').optional().isIn(['compliant', 'non-compliant', 'pending', 'in-progress']),
+  body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be at most 2000 characters'),
+];
+
+const projectValidation = [
+  body('name').trim().notEmpty().withMessage('Project name is required')
+    .isLength({ max: 200 }).withMessage('Project name must be at most 200 characters'),
+  body('status').optional().isIn(['planning', 'in-progress', 'completed', 'on-hold', 'cancelled']),
+  body('description').optional().trim().isLength({ max: 2000 }).withMessage('Description must be at most 2000 characters'),
+];
+
+const healthcareValidation = [
+  body('patientName').trim().notEmpty().withMessage('Patient name is required')
+    .isLength({ max: 200 }).withMessage('Patient name must be at most 200 characters'),
+  body('recordType').trim().notEmpty().withMessage('Record type is required')
+    .isLength({ max: 100 }).withMessage('Record type must be at most 100 characters'),
+];
+
+const skillValidation = [
+  body('name').trim().notEmpty().withMessage('Skill name is required')
+    .isLength({ max: 200 }).withMessage('Skill name must be at most 200 characters'),
+  body('category').trim().notEmpty().withMessage('Category is required')
+    .isLength({ max: 100 }).withMessage('Category must be at most 100 characters'),
+];
+
+const certificateValidation = [
+  body('title').trim().notEmpty().withMessage('Certificate title is required')
+    .isLength({ max: 200 }).withMessage('Certificate title must be at most 200 characters'),
+  body('issuer').trim().notEmpty().withMessage('Issuer is required')
+    .isLength({ max: 200 }).withMessage('Issuer must be at most 200 characters'),
+];
+
+const reportValidation = [
+  body('title').trim().notEmpty().withMessage('Report title is required')
+    .isLength({ max: 200 }).withMessage('Report title must be at most 200 characters'),
+  body('type').trim().notEmpty().withMessage('Report type is required')
+    .isLength({ max: 100 }).withMessage('Report type must be at most 100 characters'),
+];
+
+module.exports = {
+  idParam,
+  paginationQuery,
+  businessValidation,
+  productValidation,
+  customerValidation,
+  complianceValidation,
+  projectValidation,
+  healthcareValidation,
+  skillValidation,
+  certificateValidation,
+  reportValidation,
+};

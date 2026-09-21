@@ -1,0 +1,140 @@
+const mongoose = require('mongoose');
+
+// Ensure all AI models are registered before creating indexes
+require('../models/AiConversation');
+require('../models/AiCache');
+require('../models/AiEmbedding');
+require('../models/AiConversationSession');
+require('../models/AiToolCall');
+require('../models/AiKnowledgeDocument');
+require('../models/RecommendationFeedback');
+require('../models/DocumentAnalysis');
+require('../models/AnalyticsEvent');
+require('../models/AiMetric');
+require('../models/Organization');
+require('../models/AiAgent');
+require('../models/AgentConversation');
+require('../models/TeamMember');
+require('../models/Subscription');
+require('../models/UsageTracking');
+require('../models/Invoice');
+require('../models/Invitation');
+
+/**
+ * Drop a conflicting index so it can be recreated with correct options.
+ * MongoDB throws an error when an index with the same name exists but with
+ * different options (e.g. missing `expireAfterSeconds` on a TTL index).
+ * @param {string} collectionName - Collection to inspect
+ * @param {string} indexName - Index name to reconcile
+ */
+const reconcileIndexes = async (collectionName, indexName, requiredOptions = {}) => {
+  try {
+    const db = mongoose.connection.db;
+    const collection = db.collection(collectionName);
+    const indexes = await collection.indexes();
+
+    const existing = indexes.find((idx) => idx.name === indexName);
+    if (!existing) return;
+
+    // Check if the existing index is missing any of the required options
+    const needsRecreate = Object.entries(requiredOptions).some(
+      ([key, value]) => existing[key] !== value
+    );
+
+    if (needsRecreate) {
+      console.log(`Recreating index "${indexName}" on "${collectionName}" with correct options...`);
+      await collection.dropIndex(indexName);
+    }
+  } catch (err) {
+    console.warn(`Index reconciliation skipped for "${collectionName}.${indexName}":`, err.message);
+  }
+};
+
+// Ensure all indexes are created for optimal performance
+const ensureIndexes = async () => {
+  const db = mongoose.connection.db;
+  
+  console.log('Ensuring database indexes...');
+  
+  try {
+    // Fix TTL index conflict on AiCache (older deployments created expiresAt_1 without expireAfterSeconds)
+    await reconcileIndexes('aicaches', 'expiresAt_1', { expireAfterSeconds: 0 });
+
+    // User indexes
+    await mongoose.model('User').createIndexes();
+    
+    // Business indexes
+    await mongoose.model('Business').createIndexes();
+    
+    // Product indexes
+    await mongoose.model('Product').createIndexes();
+    
+    // Customer indexes
+    await mongoose.model('Customer').createIndexes();
+    
+    // Compliance indexes
+    await mongoose.model('Compliance').createIndexes();
+    
+    // Construction Project indexes
+    await mongoose.model('ConstructionProject').createIndexes();
+    
+    // Healthcare Record indexes
+    await mongoose.model('HealthcareRecord').createIndexes();
+    
+    // Skill indexes
+    await mongoose.model('Skill').createIndexes();
+    
+    // Certificate indexes
+    await mongoose.model('Certificate').createIndexes();
+    
+    // Report indexes
+    await mongoose.model('Report').createIndexes();
+    
+    // Activity indexes
+    await mongoose.model('Activity').createIndexes();
+    
+    // Notification indexes
+    await mongoose.model('Notification').createIndexes();
+
+    // AI Infrastructure indexes (Phase 1)
+    await mongoose.model('AiConversation').createIndexes();
+    await mongoose.model('AiCache').createIndexes();
+    await mongoose.model('AiEmbedding').createIndexes();
+
+    // Assistant Engine indexes (Phase 2)
+    await mongoose.model('AiConversationSession').createIndexes();
+    await mongoose.model('AiToolCall').createIndexes();
+
+    // Enterprise RAG & Knowledge Base indexes (Phase 3A)
+    await mongoose.model('AiKnowledgeDocument').createIndexes();
+
+    // Enterprise Recommendation Engine indexes (Phase 3B)
+    await mongoose.model('Recommendation').createIndexes();
+    await mongoose.model('RecommendationFeedback').createIndexes();
+
+    // Document Intelligence indexes (Phase 3C)
+    await mongoose.model('DocumentAnalysis').createIndexes();
+
+    // ML & AI Analytics indexes (Phase 4)
+    await mongoose.model('AnalyticsEvent').createIndexes();
+    await mongoose.model('AiMetric').createIndexes();
+
+    // AI Agent Framework indexes (Phase 7)
+    await mongoose.model('Organization').createIndexes();
+    await mongoose.model('AiAgent').createIndexes();
+    await mongoose.model('AgentConversation').createIndexes();
+
+    // SaaS Layer indexes (Phase 8)
+    await mongoose.model('TeamMember').createIndexes();
+    await mongoose.model('Subscription').createIndexes();
+    await mongoose.model('UsageTracking').createIndexes();
+    await mongoose.model('Invoice').createIndexes();
+    await mongoose.model('Invitation').createIndexes();
+    
+    console.log('All indexes ensured successfully');
+  } catch (error) {
+    console.error('Index creation error:', error.message);
+  }
+};
+
+module.exports = { ensureIndexes };

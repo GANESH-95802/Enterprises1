@@ -1,0 +1,1 @@
+import{a as t}from"./index-BaihCMs2.js";const i={getHealth:()=>t.get("/monitoring/health"),getPerformance:()=>t.get("/monitoring/performance"),getSecurityAudit:()=>t.get("/monitoring/security-audit"),runSecurityAudit:()=>t.post("/monitoring/security-audit"),getErrorStats:()=>t.get("/monitoring/errors")};export{i as m};

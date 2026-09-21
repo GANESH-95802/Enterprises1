@@ -1,0 +1,88 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run security audit
+        working-directory: ./backend
+        run: npm audit --omit=dev
+
+      - name: Run lint check
+        working-directory: ./backend
+        run: node --check server.js
+
+      - name: Run module load tests
+        working-directory: ./backend
+        run: node -e "
+          require('./services/ai/engines');
+          require('./routes/ai');
+          require('./routes/assistant');
+          require('./routes/knowledge');
+          require('./routes/recommendation');
+          require('./routes/documentIntelligence');
+          require('./routes/analytics');
+          require('./routes/monitoring');
+          console.log('All modules loaded successfully');
+        "
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: ai-enterprise-hub:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Production deployment placeholder"
+          echo "Configure deployment to your cloud provider (VPS, Kubernetes, etc.)"
